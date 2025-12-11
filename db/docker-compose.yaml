@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db1:
+    image: postgres:15
+    container_name: db1
+    restart: always
+    environment:
+      POSTGRES_DB: company1_db
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db1_data:/var/lib/postgresql/data
+    networks:
+      - odoo_net
+
+  db2:
+    image: postgres:15
+    container_name: db2
+    restart: always
+    environment:
+      POSTGRES_DB: company2_db
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db2_data:/var/lib/postgresql/data
+    networks:
+      - odoo_net
+
+  db3:
+    image: postgres:15
+    container_name: db3
+    restart: always
+    environment:
+      POSTGRES_DB: company3_db
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db3_data:/var/lib/postgresql/data
+    networks:
+      - odoo_net
+
+volumes:
+  db1_data:
+  db2_data:
+  db3_data:
+
+networks:
+  odoo_net:
+    driver: bridge
