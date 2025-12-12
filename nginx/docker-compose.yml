@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # -----------------------------------------
+  # NGINX REVERSE PROXY
+  # -----------------------------------------
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./proxy/certs:/etc/nginx/certs
+      - ./proxy/vhost:/etc/nginx/vhost.d
+      - ./proxy/html:/usr/share/nginx/html
+    networks:
+      - odoo-net
+
+  # -----------------------------------------
+  # LET’S ENCRYPT SSL COMPANION
+  # -----------------------------------------
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: acme-companion
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./proxy/certs:/etc/nginx/certs
+      - ./proxy/vhost:/etc/nginx/vhost.d
+      - ./proxy/html:/usr/share/nginx/html
+    environment:
+      - DEFAULT_EMAIL=admin@yourdomain.com
+    networks:
+      - odoo-net
+
+  # -----------------------------------------
+  # COMPANY 1 — ODOO + POSTGRES
+  # -----------------------------------------
+  db1:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: company1
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db1_data:/var/lib/postgresql/data
+    networks:
+      - odoo-net
+
+  odoo1:
+    image: odoo:16
+    depends_on:
+      - db1
+    environment:
+      HOST: db1
+      USER: odoo
+      PASSWORD: odoo
+      VIRTUAL_HOST: company1.yourdomain.com
+      LETSENCRYPT_HOST: company1.yourdomain.com
+      LETSENCRYPT_EMAIL: admin@yourdomain.com
+    networks:
+      - odoo-net
+
+  # -----------------------------------------
+  # COMPANY 2 — ODOO + POSTGRES
+  # -----------------------------------------
+  db2:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: company2
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db2_data:/var/lib/postgresql/data
+    networks:
+      - odoo-net
+
+  odoo2:
+    image: odoo:16
+    depends_on:
+      - db2
+    environment:
+      HOST: db2
+      USER: odoo
+      PASSWORD: odoo
+      VIRTUAL_HOST: company2.yourdomain.com
+      LETSENCRYPT_HOST: company2.yourdomain.com
+      LETSENCRYPT_EMAIL: admin@yourdomain.com
+    networks:
+      - odoo-net
+
+  # -----------------------------------------
+  # COMPANY 3 — ODOO + POSTGRES
+  # -----------------------------------------
+  db3:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: company3
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db3_data:/var/lib/postgresql/data
+    networks:
+      - odoo-net
+
+  odoo3:
+    image: odoo:16
+    depends_on:
+      - db3
+    environment:
+      HOST: db3
+      USER: odoo
+      PASSWORD: odoo
+      VIRTUAL_HOST: company3.yourdomain.com
+      LETSENCRYPT_HOST: company3.yourdomain.com
+      LETSENCRYPT_EMAIL: admin@yourdomain.com
+    networks:
+      - odoo-net
+
+# -----------------------------------------
+# VOLUMES
+# -----------------------------------------
+volumes:
+  db1_data:
+  db2_data:
+  db3_data:
+
+# -----------------------------------------
+# NETWORK
+# -----------------------------------------
+networks:
+  odoo-net:
+    driver: bridge
