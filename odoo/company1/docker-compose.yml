@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db1:
+    image: postgres:15
+    container_name: db1
+    environment:
+      - POSTGRES_DB=company1
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+    volumes:
+      - db1_data:/var/lib/postgresql/data
+
+  odoo1:
+    image: odoo:16
+    container_name: company1_odoo
+    depends_on:
+      - db1
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db1
+      - USER=odoo
+      - PASSWORD=odoo
+      - VIRTUAL_HOST=company1.yourdomain.com
+      - LETSENCRYPT_HOST=company1.yourdomain.com
+    volumes:
+      - odoo1_data:/var/lib/odoo
+
+volumes:
+  db1_data:
+  odoo1_data:
